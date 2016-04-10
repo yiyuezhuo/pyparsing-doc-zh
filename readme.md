@@ -991,7 +991,455 @@ print "%s %s(%d) %s(%d), %s" % (stats.date, stats.team1.school, stats.team1.scor
 ```
 
 ## <a name="page">从网页数据中提取数据
-翻译TODO...
+
+网络已经变成一个免费的巨大数据源，它们可以在你家用电脑的浏览器窗口上被访问。而大多数网上的资源
+是被以计算机程序易于使用的方式被编码的，其中大多数又是为给人类用户阅读接口的浏览器而定制的HTML
+标记语言。
+
+有时候你会需要从网页上获取特定格式的数据。如果数据没有被实现转换成为逗号分隔或其他易于处理的格式，
+你会需要写一个解析器来处理实际要提取数据伴随的HTML的标签。
+
+经常看到很多人试图使用正则表达式来执行这个任务，作为例子，有的人尝试提取图像引用标签从网页中，
+他们会尝试使用匹配模式`"<img src=quoted_string>"`。不幸的是,HTML与XML标签包含很多可选属性，而且浏览器对于
+不规则的HTML标签也十分宽容，对于爬虫来说，碰到这些不规则的页面可能造成很大的麻烦。下面是一些典型
+的处理HTML标签时会遇上的"陷阱":
+
+* 标签中具有额外的空格以及大小写混杂 *
+`<img  src="sphinx.jpeg">`,`<IMG  SRC="sphinx.jpeg">`与`<img  src  = "sphinx.jpeg">`尽管形式不同
+但是表示的东西是相同的。
+
+* 标签中有意料之外的属性 *
+
+`IMG` 标签经常包含可选的属性，如`align`,`alt`,`id`,`vspace`,`hspace`,`height`,`width`等。
+
+* 标签属性顺序的任意性 *
+
+如果匹配模式被扩展来处理`src`,`align`与`alt`属性，来处理这样的情况
+`<img  src="sphinx.jpeg align="top" alt="The Great Sphinx">`,然而这些属性可以以所有可能的顺序排出。
+
+* 标签属性可能会也可能不会以引号包裹 *
+
+`<img src="sphinx.jpeg">`也可以被以`<img sec='sphinx.jpeg'>`或`<img src=sphinx.jpeg>`表示。
+
+pyparsing包含了辅助方法`makeHTMLTags`来简化对这种标准标签的定义。为了使用这个方法，你应当以
+所要解析的标签名调用`makeHTMLTags`,而它会返回一个pyparsing表达式，以备之后的匹配使用。当然
+`makeHTMLTags(X)`做的比单纯的`Literal("<X>")`或`Literal("</X>")`要多，它还会处理这些问题:
+
+* 标签可能是大写或小写形式
+* "额外的"空格
+* 任意数量以任意顺序排出的属性
+* 属性值可以以单引号/双引号/没引号形式表出
+* 标签与属性名可能包含命名空间引用
+
+然而`makeHTMLTags`返回的解析表达式最强大的特性可能使解析出的结果中包含了标签的HTML属性命名
+的结果，结果名是在解析时动态创建的。
+
+下面是一个短脚本，其搜索网页中的图像引用，其打印了图像的列表与任何可能的文本。
+
+>*注释*
+>
+>标准Python库中提供了`HTMLParser`与`htmllib`来处理HTML源代码，但是它们不能
+>处理不规则的HTML。一个流行的HTML第三方处理模块是`BeautifulSoup`。这里有一个
+>`BeautifulSoup`实现(rendition)的`<IMG>`标签提取器:
+>```
+>from BeautifulSoup import BeautifulSoup
+>
+>soup = BeautifulSoup(html)
+>imgs = soup.findAll("img")
+>for img i imgs:
+>	print "'%(alt)s' : %(src)s" % img
+>```
+>`BeautifulSoup`面向整个HTML页面进行处理,并产生一个Pythonic的DOM与XPATH混合结构，
+>与对解析出的HTML标签，属性与文本域的访问方式。
+
+```python
+from pyparsing import makeHTMLTags
+import urllib
+
+# read data from web page
+url="https://www.cia.gov/library/"\
+		"publications/the-world-"\
+		"factbook/docs/refmaps.html"
+html=urllib.urlopen(url).read()
+# define expression for <img> tag
+imgTag,endImgTag=makeHTMLTags("img")
+
+# search for matching tags, and
+#print key attributes
+for img in imgTag.searchString(html):
+	print "'%(alt)s' : %(src)s" % img
+```
+
+作为使用`parseString`的替代，这个脚本使用`searchString`搜索匹配文本。对于每个`searchString`的返回值,
+脚本打印标签的属性值`alt`与`tag`,仅当在`img`表达式中存在。
+
+这个脚本只是列出了CIA Factbook在线初始页面的地图的图像元素内容。输出包含每个地图图像元素的引用的信息，
+像这样:
+
+```
+'Africa Map' : ../reference_maps/thumbnails/africa.jpg
+'Antarctic Region Map' : ../reference_maps/thumbnails/antarctic.jpg
+'Arctic Region Map' : ../reference_maps/thumbnails/arctic.jpg
+'Asia Map' : ../reference_maps/thumbnails/asia.jpg
+'Central America and Caribbean Map' : ../reference_maps/thumbnails/central_america.jpg
+'Europe Map' : ../reference_maps/thumbnails/europe.jpg
+...
+```
+
+CIA Factbook网站也包含了更复杂的页面，在那里列出了世界上使用广泛的度量单位换算比率。这是该表的一些
+数据行:
+
+Label | Label | Value |
+----------|------|--------|
+ares | square  | meters 100
+ares | square yards | 119.599
+barrels, US beer | gallons | 31
+barrels, US beer | liters |117.347 77
+barrels, US petroleum | gallons (British) | 34.97
+barrels, US petroleum | gallons (US) | 42
+barrels, US petroleum | liters | 158.987 29
+barrels, US proof spirits | gallons | 40
+barrels, US proof spirits | liters | 151.416 47
+bushels (US) | bushels (British) | 0.968 9
+bushels (US) | cubic feet | 1.244 456
+bushels (US) | cubic inches | 2,150.42
+
+与此表对应的HTML源代码为:
+
+```
+<TR align="left" valign="top" bgcolor="#FFFFFF">
+<td width=33% valign=top class="Normal">ares </TD>
+<td width=33% valign=top class="Normal">square meters </TD>
+<td width=33% valign=top class="Normal">100 </TD>
+</TR>
+<TR align="left" valign="top" bgcolor="#CCCCCC">
+<td width=33% valign=top class="Normal">ares </TD>
+<td width=33% valign=top class="Normal">square yards </TD>
+<td width=33% valign=top class="Normal">119.599 </TD>
+</TR>
+<TR align="left" valign="top" bgcolor="#FFFFFF">
+<td width=33% valign=top class="Normal">barrels, US beer </TD>
+<td width=33% valign=top class="Normal">gallons </TD>
+<td width=33% valign=top class="Normal">31 </TD>
+</TR>
+<TR align="left" valign="top" bgcolor="#CCCCCC">
+<td width=33% valign=top class="Normal">barrels, US beer </TD>
+<td width=33% valign=top class="Normal">liters </TD>
+<td width=33% valign=top class="Normal">117.347 77 </TD>
+</TR>
+...
+```
+
+现在我们有了一个样例HTML作为解析参照的模板。我们可以用`makeHTMLTags`来简化对BNF的构建。
+
+```
+entry ::= <tr> conversionLabel conversionLabel conversionValue </tr>
+conversionLabel ::= <td> text </td>
+conversionValue ::= <td> readableNumber </td>
+```
+
+注意换算比率被以易于阅读的形式格式化过了(对于人来说),表现为:
+
+* 整数部分每3位用一个逗号隔断
+* 小数部分每3位用一个空格隔断
+
+我们可以准备在解析行为处反格式化此文本在调用`float()`将其转为浮点数之前。我们也将
+需要在转换标记处进行处理，它们可能包含嵌入的`<BR>`标签进行显式换行。
+
+从自动化的角度看，我们的脚本必须以所要提取的网页的URL下载HTML开始，我发现Python
+的`urllib`模块对于这个任务已经足够了:
+
+```python
+import urllib
+url = "https://www.cia.gov/library/publications/" \
+		"the-world-factbook/appendix/appendix-g.html"
+html = urllib.urlopen(url).read()
+```
+
+目前我们已经从网页下到了HTML源代码到我们的Python变量`html`中，其以字符串形式存在。
+我们将在之后将从这个字符串中提取信息。
+
+但是我们似乎忘记了什么--我们应该先初始化我们的语法!让我们从数字开始，浏览这个网页，
+可以看到数字以这些形式表出:
+
+```
+200
+0.032 808 40
+1,728
+0.028 316 846 592
+3,785.411 784
+```
+
+下面是一个可以匹配这些数字的表达式
+
+```python
+decimalNumber = Word(nums, nums+",") + Optional("." + OneOrMore(Word(nums)))
+```
+
+可以看到我们以新的形式使用了`Word`构造器，由一个参数变成了一个。当使用这个形式，`Word`将将
+第一个参数作为"开头"(starting)字符，而第二个参数作为"体"(body)参数。其指定了匹配字符串在第一个
+字符上的可用字符集与之后的可用字符集。如上述形式可以匹配`1,000`而不能匹配`,456`。`Word`的
+这种方法对于解析一般编程语言中称为标识符的东西是有用的，比如下式可以匹配Python变量名:
+
+```python
+Word(alphas+"_", alphanums+"_")
+```
+
+现在`decimalNumber`是自足的了，我们可以在将它组合到更大，更复杂的表达式之前对其单独进行测试
+
+>*最佳实践:增量测试*
+> 
+>单独测试语法元素避免当合并它们到更大的语法中碰见意外情况。
+
+使用样例列表，我们可以得到下面的结果:
+
+```
+['200']
+['0', '.', '032', '808', '40']
+['1,728']
+['0', '.', '028', '316', '846', '592']
+['3,785', '.', '411', '784']
+```
+
+为了将它们转成浮点数，我们需要
+
+* 将独立的标签合并在一起
+* 从整数部分中删除逗号
+
+尽管这两步可以在一个表达式里完成，但我想要创建两个解析行为来展示解析行为可以被链式调用。
+
+第一个解析行为可以被叫做`joinTokens`，其可以以lambda表达式式实现:
+
+```python
+joinTokens=lambda : tokens : "".join(tokens)
+```
+
+下一个解析行为可以被叫做`stripCommas`,作为链的下一部分，`stripCommas`将接只收到一个字符串
+(`joinTokens`的输出)，所以我们将只需要操作`tokens`的第0个元素:
+
+```python
+stripCommas = lambda tokens : tokens[0].replace(",", "")
+```
+
+当然，我们需要一个最终的解析行为来转换为浮点数:
+
+```python
+convertToFloat = lambda tokens : float(tokens[0])
+```
+
+现在，将这些解析行为装备到一个表达式上，我们使用`setParseAction`与`addParseAction`
+方法做到这一点:
+
+```python
+decimalNumber.setParseAction( joinTokens )
+decimalNumber.addParseAction( stripCommas )
+decimalNumber.addParseAction( convertToFloat )
+```
+
+后者，我们可以仅调用`setParseAction`，然后以逗号分隔参数列表形式将解析行为穿进去，
+这将定义出一个以相同方式工作的链:
+
+```python
+decimalNumber.setParseAction( joinTokens, stripCommas, convertToFloat )
+```
+
+接下来，让我们做更充足的测试，通过使用`decimalNumber`来扫描整个HTML源代码
+
+```python
+tdStart,tdEnd = makeHTMLTags("td")
+conversionValue = tdStart + decimalNumber + tdEnd
+for tokens,start,end in conversionValue.scanString(html):
+	print tokens
+```
+
+`scanString`是另一个解析方法，其对于测试语法脆弱性特别有用。`parseString`会对文本进行
+整体匹配。而`scanString`在输入文本中扫描，观察是否有文本中的部分与语法相匹配。而且
+`scanString`是一个生成器函数，这意味着它返回的只是它那时候匹配到的标签，而不是先解析完整个
+文本。在示例代码中，你可以看到`scanString`返回的标记，以及它们的初始与结束位置对于每个匹配。
+
+这是使用`scanString`测试`conversionValue`表达式的原始结果:
+
+```
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False,
+40.468564223999998, '</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False,
+0.40468564223999998, '</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False, 43560.0,
+'</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False,
+0.0040468564224000001, '</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False,
+4046.8564224000002, '</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False,
+0.0015625000000000001, '</td>']
+['td', ['width', '33%'], ['valign', 'top'], ['class', 'Normal'], False, 4840.0,
+'</td>']
+...
+```
+
+是的，解析出的东西包含<TD>里的所有内容，这使人分心。我们应当为`decimalNumber`表达式赋予
+一个结果名字然后在打印部分只将它所对应的部分打印出来:
+
+```python
+conversionValue = tdStart + decimalNumber.setResultsName("factor") + tdEnd
+for tokens,start,end in conversionValue.scanString(html):
+print tokens.factor
+```
+
+现在我们的输出就比较干净了:
+
+```
+40.468564224
+0.40468564224
+43560.0
+0.0040468564224
+4046.8564224
+0.0015625
+4840.0
+100.0
+...
+```
+
+我们已经构建了表达式来提取换算比率本身，但是我们还缺乏这个换算比率是从哪个单位到哪个单位的信息。
+为了解析这个，我们将使用一个非常类似于解析转换比率的表达式:
+
+```python
+fromUnit = tdStart + units.setResultsName("fromUnit") + tdEnd
+toUnit = tdStart + units.setResultsName("toUnit") + tdEnd
+```
+
+但是我们如何定义`units`本身？观察页面，似乎并没有可以清晰可辨的模式。我们可以尝试
+`OneOrMore(Word(alphas))`，但是这在匹配像"barrels,US petroleum"或"gallons (British)"
+时失败。而尝试为其添加专门的符号应对这样的错误这种策略，会在我们碰到之前没看到的情况
+时失败。
+
+我们所知道的关于`units`的一件事是，它总在碰到`</TD>`闭标签时结束。根据这个知识，我们
+可以避免对`units`的模式进行集的直接定义，而转而使用pyparsing辅助类`SkipTo`。`SkipTo`
+收集所有内部文本，从当前解析位置到目标表达式，到一个单独的字符串中。使用`SkipTo`，我们
+可以如此简单的定义`units`。
+
+```python
+units = SkipTo( tdEnd )
+```
+
+我们还没有对所得到的文本做一些立即处理，像去掉两边的空格之类的。但是至少我们没有遗漏匹配
+任何合法的单位。
+
+我们已经准备好我们的表达式来提取单位转换信息了，通过增加从哪种单位到哪种单位的信息:
+
+```python
+conversion = trStart + fromUnits + toUnits + conversionValue + trEnd
+```
+
+重复扫描过程，我们可以得到下面的东西
+
+```python
+for tokens,start,end in conversion.scanString(html):
+	print "%(fromUnit)s : %(toUnit)s : %(factor)f" % tokens
+```
+```
+acres : ares : 40.468564
+acres : hectares : 0.404686
+acres : square feet : 43560.000000
+acres : square kilometers : 0.004047
+acres : square meters : 4046.856422
+...
+```
+
+这看起来不坏，不过到了这个列表的下边，发现了一些格式化问题:
+
+```
+barrels, US petroleum : liters : 158.987290
+barrels, US proof
+spirits : gallons : 40.000000
+barrels, US proof
+spirits : liters : 151.416470
+bushels (US) : bushels (British) : 0.968900
+```
+
+在更下面，我们看到了这样的东西:
+
+```
+tons, net register : cubic feet of permanently enclosed space <br>
+	for cargo and passengers : 100.000000
+tons, net register : cubic meters of permanently enclosed space <br>
+	for cargo and passengers : 2.831685
+```
+
+>*网络爬虫的注释*
+>
+>像这种网上的数据，一般是在服务条款(TOS)下放出的，而它并不总是允许HTML处理脚本对其
+>进行数据收集。经常这些条款会阻止试图模仿和与之竞争的站点为意图的访问。但是在另外一些
+>情况，条款要却倒网站是完全被人类用户所使用的，网站的服务器不能承担爬虫施加的过度负担，
+>而网站拥有者会获得全额赔偿为它网站的内容。大多数TOS允许数据提取对于私人目的使用和
+>引用。总要检查网站的服务条款在为你自己获取数据之前。
+>
+>对于这个例子，CIA Factbook网站的内容是在公共域下的(见 
+>https://www.cia.gov/about-cia/site-policies/index.html#link1)
+
+为了清理度量单位，我们需要清楚换行和额外的空格，并且移除嵌入的`<br>`标签。正如你猜到的，
+我们将使用解析行为办这件事.
+
+我们的解析行为有两个任务:
+
+* 移除`<br>`标记.
+* 压缩空格与换行符
+
+在Python中最简单的压缩重复的空格的方式是使用`str`类型的方法`split`然后再跟`join`。为了移除
+`<br>`标签，我们将只使用`str.replace("<br>"," ")`。一个简单的lambda表达式同时处理这两个
+情况不太清晰，所以这次我们创建一个真正的Python函数并且将它组装到units表达式上:
+
+```python
+def htmlCleanup(t):
+	unitText = t[0]
+	unitText = unitText.replace("<br>"," ")
+	unitText = " ".join(unitText.split())
+	return unitText
+
+units.setParseAction(htmlCleanup)
+```
+
+在这些变化之后，我们的换算比率提取器可以收集单位转换信息，我们可以加载它们到一个Python
+字典变量或者本地数据库中为我们之后的程序来调用它们提供便利。
+
+这是换算比率提取程序的完整代码:
+
+```python
+import urllib
+from pyparsing import *
+
+url = "https://www.cia.gov/library/" \
+		"publications/the-world-factbook/" \
+		"appendix/appendix-g.html"
+page = urllib.urlopen(url)
+html = page.read()
+page.close()
+
+tdStart,tdEnd = makeHTMLTags("td")
+trStart,trEnd = makeHTMLTags("tr")
+decimalNumber = Word(nums+",") + Optional("." + OneOrMore(Word(nums)))
+joinTokens = lambda tokens : "".join(tokens)
+stripCommas = lambda tokens: tokens[0].replace(",","")
+convertToFloat = lambda tokens: float(tokens[0])
+decimalNumber.setParseAction( joinTokens, stripCommas, convertToFloat )
+
+conversionValue = tdStart + decimalNumber.setResultsName("factor") + tdEnd
+
+units = SkipTo(tdEnd)
+def htmlCleanup(t):
+	unitText = t[0]
+	unitText = " ".join(unitText.split())
+	unitText = unitText.replace("<br>","")
+	return unitText
+
+units.setParseAction(htmlCleanup)
+fromUnit = tdStart + units.setResultsName("fromUnit") + tdEnd
+toUnit = tdStart + units.setResultsName("toUnit") + tdEnd
+conversion = trStart + fromUnit + toUnit + conversionValue + trEnd
+
+for tokens,start,end in conversion.scanString(html):
+	print "%(fromUnit)s : %(toUnit)s : %(factor)s" % tokens
+```
 
 ## <a name="SS">一个简易S表达式解析器
 翻译TODO...
