@@ -7,7 +7,8 @@ by Paul McGuire
 What is "parsing"? Parsing is processing a series of symbols to extract their meaning. 
 Typically, this means reading the words of a sentence and drawing information from them. 
 When application programs need to process data that is provided as text, they must use some form of parsing logic. 
-This logic scans the text characters and character groups (words) and recognizes patterns of groups to extract the underlying commands or information.
+This logic scans the text characters and character groups (words) 
+and recognizes patterns of groups to extract the underlying commands or information.
 
 Software parsers are usually special-purpose programs, built to process a specific form of text. 
 This text could be a set of encoded notations on insurance or medical forms; function declarations in a C header file; 
@@ -17,25 +18,26 @@ In each case, the parsers process a specific set of character groups and pattern
 
 For instance, when parsing the string Hello, World! you might wish to parse any greeting that follows its general pattern. 
 Hello, World! begins with a salutation: the word Hello. There are many salutations--Howdy,
- Greetings, Aloha, G'day, and so on--so you could define a very narrow greeting grammar to begin with a single-word salutation. 
- A comma character follows, and then comes the object of the greeting, the greetee, also a single word.
- Lastly, some form of terminating punctuation ends the greeting, such as an exclamation point. 
- This greeting grammar looks roughly like this (reading `::` as "is composed of"):
+Greetings, Aloha, G'day, and so on--so you could define a very narrow greeting grammar to begin with a single-word salutation. 
+A comma character follows, and then comes the object of the greeting, the greetee, also a single word.
+Lastly, some form of terminating punctuation ends the greeting, such as an exclamation point. 
+This greeting grammar looks roughly like this (reading `::` as "is composed of"):
  
 ```
-word					:: group of alphabetic characters
-salutation			:: word
-comma				:: ","
-greetee				:: word
+word           :: group of alphabetic characters
+salutation     :: word
+comma				      :: ","
+greetee				    :: word
 endPunctuation	:: "!"
-greeting				:: salutation comma greetee endPunctuation
+greeting				   :: salutation comma greetee endPunctuation
 ```
 
 This is the Backus-Naur form (BNF). There are various dialects for symbols representing optional/mandatory constructs, 
 repetition, alternation, and so on.
 
 Once you have specified the target grammar in a BNF, you must then convert it to an executable form. 
-A common technique is to develop a recursive-descent parser, one that defines functions that read individual terminal constructs of the grammar, 
+A common technique is to develop a recursive-descent parser, 
+one that defines functions that read individual terminal constructs of the grammar, 
 and then higher-level functions that call the lower-level functions. 
 Functions can return success or failure if they match at the current parsing position 
 (or return matching tokens for success and raise exceptions for failure).
@@ -59,7 +61,8 @@ greeting = salutation + comma + greetee + endPunctuation
 Several pyparsing features help developers create their text-parsing functions quickly:
 
 * Grammars are native Python, so no separate grammar definition files are required
-* No special syntax is required, outside + for And, ^ for Or (longest, or "greedy" match), | for MatchFirst (first match), and ~ for Not
+* No special syntax is required, outside `+` for And, `^` for Or (longest, or "greedy" match), `|` 
+* for MatchFirst (first match), and `~` for Not
 * No separate code-generation step is required
 * It implicitly skips white space and comments that may appear between parse elements; 
 there is no need to clutter your grammar with markers for ignorable text
@@ -99,13 +102,13 @@ for t in tests:
         print t, "->", greeting.parseString(t)
 ```
 ```
-Hello, World! -> ['Hello', ',', 'World', '!']
-Hey, Jude! -> ['Hey', ',', 'Jude', '!']
-Hi, Mom! -> ['Hi', ',', 'Mom', '!']
-G'day, Mate! -> ["G'day", ',', 'Mate', '!']
-Yo, Adrian! -> ['Yo', ',', 'Adrian', '!']
+Hello, World!   -> ['Hello', ',', 'World', '!']
+Hey, Jude!      -> ['Hey', ',', 'Jude', '!']
+Hi, Mom!        -> ['Hi', ',', 'Mom', '!']
+G'day, Mate!    -> ["G'day", ',', 'Mate', '!']
+Yo, Adrian!     -> ['Yo', ',', 'Adrian', '!']
 Howdy, Pardner! -> ['Howdy', ',', 'Pardner', '!']
-Whattup, Dude! -> ['Whattup', ',', 'Dude', '!']
+Whattup, Dude!  -> ['Whattup', ',', 'Dude', '!']
 ```
 
 ## Pyparsing Is a "Combinator"
@@ -114,7 +117,8 @@ With the pyparsing module, you first define the basic pieces of your grammar.
 Then you combine them into more complex parse expressions for the various branches of the overall grammar syntax. 
 Combine them by defining relationships such as:
 
-* Which expressions should follow each other in the grammar, such as "the keyword if is followed by a Boolean expression enclosed in parentheses"
+* Which expressions should follow each other in the grammar, such as 
+"the keyword if is followed by a Boolean expression enclosed in parentheses"
 * Which expressions are valid alternatives at a certain point in the grammar, such as 
 "a SQL command may start with SELECT, INSERT, UPDATE, or DELETE"
 * Which expressions are optional, as in "a phone number may optionally be preceded by an area code, enclosed in parentheses"
@@ -127,24 +131,27 @@ It also helps you keep track of your progress in implementing the grammar with p
 
 ## Defining a Simple Grammar
 
-The smallest building blocks of most grammars are typically exact strings of characters. For example, here is a simple BNF for parsing a phone number:
+The smallest building blocks of most grammars are typically exact strings of characters. 
+For example, here is a simple BNF for parsing a phone number:
 
 ```
-number			:: '0'.. '9'*
+number			   :: '0'.. '9'*
 phoneNumber	:: [ '(' number ')' ] number '-' number
 ```
 
-Because this looks for dashes and parentheses within a phone number string, you can also define simple literal tokens for these punctuation marks:
+Because this looks for dashes and parentheses within a phone number string, 
+you can also define simple literal tokens for these punctuation marks:
 
-```
+```python
 dash   = Literal( "-" )
 lparen = Literal( "(" )
 rparen = Literal( ")" )
 ```
 
-To define the groups of numbers in the phone number, you need to handle groups of characters of varying lengths. For this, use the Word token:
+To define the groups of numbers in the phone number, you need to handle groups of characters of varying lengths. 
+For this, use the Word token:
 
-```
+```python
 digits = "0123456789"
 number = Word( digits )
 ```
@@ -168,7 +175,6 @@ phoneNumber = lparen + number + rparen + number + dash + number
 For an even cleaner version, the `+` operator will join strings to parse elements, implicitly converting the strings to Literals. 
 This gives the very easy-to-read:
 
-
 ```python
 phoneNumber = "(" + number + ")" + number + "-" + number
 ```
@@ -181,23 +187,26 @@ phoneNumber = Optional( "(" + number + ")" ) + number + "-" + number
 
 ## Using the Grammar
 
-Once you've defined your grammar, the next step is to apply it to the source text. Pyparsing expressions support three methods for processing input text with a given grammar:
+Once you've defined your grammar, the next step is to apply it to the source text. 
+Pyparsing expressions support three methods for processing input text with a given grammar:
 
 * The parseString method uses a grammar that completely specifies the contents of an input string, parses the string, 
 and returns a collection of strings and substrings for each grammar construct.
 * The scanString method uses a grammar that may match only parts of an input string, scans the string looking for matches, 
 and returns a tuple that contains the matched tokens and their starting and ending locations within the input string.
 * The transformString method is a variation on scanString. 
-It applies any changes to the matched tokens and returns a single string representing the original input text, as modified by the individual matches.
+It applies any changes to the matched tokens and returns a single string representing the original input text, 
+as modified by the individual matches.
 
 The initial Hello, World! parser calls parseString and returns straightforward token results:
 
-```python
+```
 Hello, World! -> ['Hello', ',', 'World', '!']
 ```
 
 Although this looks like a simple list of token strings, pyparsing returns data using a ParseResults object. 
-In the example above, the results variable behaves like a simple Python list. In fact, you can index into the results just like a list:
+In the example above, the results variable behaves like a simple Python list. 
+In fact, you can index into the results just like a list:
 
 
 ```python
@@ -212,9 +221,11 @@ Hello
 World
 ```
 
-ParseResults also lets you define names for individual syntax elements, making it easier to retrieve bits and pieces of the parsed text. 
-This is especially helpful when a grammar includes optional elements, which can change the length and offsets of the returned token list.
- By modifying the definitions of `salute` and `greetee`:
+ParseResults also lets you define names for individual syntax elements, 
+making it easier to retrieve bits and pieces of the parsed text. 
+This is especially helpful when a grammar includes optional elements, 
+which can change the length and offsets of the returned token list.
+By modifying the definitions of `salute` and `greetee`:
 
 ```python
 salute  = Word( alphas+"'" ).setResultsName("salute")
@@ -223,7 +234,6 @@ greetee = Word( alphas ).setResultsName("greetee")
 
 you can reference the corresponding tokens as if they were attributes of the returned results object:
 
-
 ```python
 print hello, "->", results    
 print results.salute
@@ -231,7 +241,6 @@ print results.greetee
 ```
 
 Now the program will print:
-
 
 ```
 G'day, Mate! -> ["G'day", ',', 'Mate', '!']
@@ -250,14 +259,16 @@ data            = phoneNumberList.parseString( inputString )
 
 This will return data as a pyparsing ParseResults object, containing a list of all of the input phone numbers.
 
-Pyparsing includes some helper expressions, such as delimitedList, so that if your input were a comma-separated list of phone numbers, 
+Pyparsing includes some helper expressions, such as `delimitedList`, 
+so that if your input were a comma-separated list of phone numbers, 
 you could simply change phoneNumberList to:
 
 ```python
 phoneNumberList = delimitedList( phoneNumber )
 ```
 
-This will return the same list of phone numbers that you had before. (delimitedList supports any custom string or expression as a delimiter,
+This will return the same list of phone numbers that you had before. 
+(`delimitedList` supports any custom string or expression as a delimiter,
  but comma delimiters are the most common, and so they are the default.)
 
 If, instead of having a string containing only phone numbers, you had a complete mailing list of names, addresses, 
@@ -275,7 +286,10 @@ for data,dataStart,dataEnd in
     .
 ```
 
-Lastly, if you had the same mailing list but wished to hide the numbers from, say, a potential telemarketer, you could transform the string by attaching a parse action that just changes all phone numbers to the string (000)000-0000. Replacing the input tokens with a fixed string is a common parse action, so pyparsing provides a built-in function replaceWith to make this very simple:
+Lastly, if you had the same mailing list but wished to hide the numbers from, say, a potential telemarketer, 
+you could transform the string by attaching a parse action that just changes all phone numbers to the string (000)000-0000. 
+Replacing the input tokens with a fixed string is a common parse action, 
+so pyparsing provides a built-in function replaceWith to make this very simple:
 
 ```python
 phoneNumber.setParseAction( replaceWith("(000)000-0000") )
@@ -302,19 +316,21 @@ At this point, you can choose to fix the input text or make the grammar more tol
 ## A Complete Application
 
 Consider an application where you need to process chemical formulas, such as NaCl, H2O, or C6H5OH. For this application, 
-the chemical formula grammar will be one or more element symbols, each followed by an optional integer. In BNF-style notation, this is:
+the chemical formula grammar will be one or more element symbols, each followed by an optional integer. 
+In BNF-style notation, this is:
 
 ```
-integer				:: '0'..'9'+
-cap					:: 'A'..'Z'
-lower					:: 'a'..'z'
+integer			   	:: '0'..'9'+
+cap					      :: 'A'..'Z'
+lower					    :: 'a'..'z'
 elementSymbol	:: cap lower*
-elementRef		:: elementSymbol [ integer ]
-formula				:: elementRef+
+elementRef		  :: elementSymbol [ integer ]
+formula				   :: elementRef+
 ```
 
 The pyparsing module handles these concepts with the classes Optional and OneOrMore. 
-The definition of the elementSymbol will use the two-argument constructor Word: the first argument lists the set of valid leading characters, 
+The definition of the elementSymbol will use the two-argument constructor Word: 
+the first argument lists the set of valid leading characters, 
 and the second argument gives the set of valid body characters. Using the pyparsing module, a simple version of the grammar is:
 
 ```python
@@ -333,9 +349,9 @@ So far, this program is an adequate tokenizer, processing the following formulas
 The default behavior for pyparsing is to return all of the parsed tokens within a single list of matching substrings:
 
 ```
-H2O		-> ['H', '2', 'O']
+H2O		  -> ['H', '2', 'O']
 C6H5OH	-> ['C', '6', 'H', '5', 'O', 'H']
-NaCl		-> ['Na', 'Cl']
+NaCl		 -> ['Na', 'Cl']
 ```
 
 Of course, you want to do some processing with these returned results, beyond simply printing them out as a list. 
@@ -368,9 +384,9 @@ elementRef = Group( element + Optional( Word( digits ) ) )
 you will now get the results grouped by chemical symbol:
 
 ```
-H2O		-> [['H', '2'], ['O']]
+H2O		  -> [['H', '2'], ['O']]
 C6H5OH -> [['C', '6'], ['H', '5'], ['O'], ['H']]
-NaCl		-> [['Na'], ['Cl']]
+NaCl		 -> [['Na'], ['Cl']]
 ```
 
 The last simplification is to include a default value for the quantity part of elementRef, 
@@ -400,10 +416,10 @@ wt = sum( [ atomicWeight[elem] * int(qty)
 giving the results:
 
 ```
-H2O		-> [['H', '2'], ['O', '1']] (18.01528)
+H2O		  -> [['H', '2'], ['O', '1']] (18.01528)
 C6H5OH	-> [['C', '6'], ['H', '5'], ['O', '1'], ['H', '1']]
         (94.11124)
-NaCl		-> [['Na', '1'], ['Cl', '1']] (58.4424)
+NaCl		 -> [['Na', '1'], ['Cl', '1']] (58.4424)
 ```
 
 Listing 2 contains the entire pyparsing program.
@@ -442,9 +458,9 @@ for t in tests:
 ```
 
 ```
-H2O		-> [['H', '2'], ['O', '1']] (18.015)
+H2O		  -> [['H', '2'], ['O', '1']] (18.015)
 C6H5OH	-> [['C', '6'], ['H', '5'], ['O', '1'], ['H', '1']] (94.111)
-NaCl		-> [['Na', '1'], ['Cl', '1']] (58.442)
+NaCl	 	-> [['Na', '1'], ['Cl', '1']] (58.442)
 ```
 
 One of the nice by-products of using a parser is the inherent validation it performs on the input text. 
@@ -456,11 +472,13 @@ it would not have passed the parser.
 
 As a final example, consider the development of a simple HTML "scraper." It is not a comprehensive HTML parser, 
 as such a parser would require scores of parse expressions. Fortunately, it is not usually necessary to have a complete HTML grammar 
-definition to be able to extract significant pieces of data from most web pages, especially those autogenerated by CGI or other application programs.
+definition to be able to extract significant pieces of data from most web pages, 
+especially those autogenerated by CGI or other application programs.
 
 This example will extract data with a minimal parser, targeted to work with a specific web page--in this case, 
 the page kept by NIST listing publicly available network time protocol (NTP) servers. 
-This routine could be part of a larger NTP client application that, during its initialization, would look up what NTP servers are currently available.
+This routine could be part of a larger NTP client application that, during its initialization, 
+would look up what NTP servers are currently available.
 
 To begin developing an HTML scraper, you must first see what sort of HTML text you will need to process. 
 By visiting the web site and viewing the returned HTML source, 
@@ -468,12 +486,12 @@ you can see that the page lists the names and IP addresses of the NTP servers in
 
 
 ```
-Name				IP Address		Location
+Name				        IP Address		Location
 time-a.nist.gov	129.6.15.28	NIST, Gaithersburg, Maryland
 time-b.nist.gov	129.6.15.29	NIST, Gaithersburg, Maryland
 ```
 
-The underlying HTML source for this table uses <table>, <tr>, and <td> tags to structure the NTP server data:
+The underlying HTML source for this table uses `<table>`, `<tr>`, and `<td>` tags to structure the NTP server data:
 
 ```html
 <table border="0" cellpadding="3" cellspacing="3" frame="" width="90%">
@@ -498,17 +516,20 @@ This table is part of a much larger body of HTML, but pyparsing allows you to de
 a subset of the total input text and to scan for text that matches the given parse expression. 
 So you need only define the minimum amount of grammar required to match the desired HTML source.
 
-The program should extract the IP addresses and locations of those servers, so you can focus your grammar on just those columns of the table. 
+The program should extract the IP addresses and locations of those servers, 
+so you can focus your grammar on just those columns of the table. 
 Informally, you want to extract the values that match the pattern
 
 ```html
 <td> IP address </td> <td> location name </td>
 ```
 
-You do want to be a bit more specific than just matching on something as generic as `<td>` any text `</td>` `<td> `more any text `</td>`, 
+You do want to be a bit more specific than just matching on something as generic as 
+`<td>` any text `</td>` `<td> `more any text `</td>`, 
 because so general an expression would match the first two columns of the table instead of the second two 
 (as well as the first two columns of any table on the page!). Instead, 
-use the specific format of the IP address to help narrow your search pattern by eliminating any false matches from other table data on the page.
+use the specific format of the IP address to help narrow your search pattern by 
+eliminating any false matches from other table data on the page.
 
 To build up the elements of an IP address, start by defining an integer, then combining four integers with intervening periods:
 
@@ -536,8 +557,7 @@ Pyparsing includes a class named SkipTo for this kind of grammar element.
 You now have all the pieces you need to define the time server text pattern:
 
 ```python
-timeServer = tdStart + ipAddress + tdEnd + \
-                 tdStart + SkipTo(tdEnd) + tdEnd
+timeServer = tdStart + ipAddress + tdEnd + tdStart + SkipTo(tdEnd) + tdEnd
 ```
 
 To extract the data, invoke `timeServer.scanString`, 
@@ -577,9 +597,11 @@ Running the program in Listing 3 gives the token data:
 :
 ```
 
-Looking at these results, a couple of things immediately jump out. One is that the parser records each IP address as a series of separate tokens, 
+Looking at these results, a couple of things immediately jump out.
+One is that the parser records each IP address as a series of separate tokens, 
 one for each subfield and delimiting period. It would be nice if pyparsing were to do a bit of work during the parsing process 
-to combine these fields into a single-string token. Pyparsing's Combine class will do just this. Modify the ipAddress definition to read:
+to combine these fields into a single-string token. Pyparsing's Combine class will do just this. 
+Modify the ipAddress definition to read:
 
 ```python
 ipAddress = Combine( integer + "." + integer + "." + integer + "." + integer )
@@ -588,7 +610,8 @@ ipAddress = Combine( integer + "." + integer + "." + integer + "." + integer )
 to get a single-string token returned for the IP address.
 
 The second observation is that the results include the opening and closing HTML tags that mark the table columns. 
-While the presence of these tags is important during the parsing process, the tags themselves are not interesting in the extracted data. 
+While the presence of these tags is important during the parsing process, 
+the tags themselves are not interesting in the extracted data. 
 To have them suppressed from the returned token data, construct the tag literals with the suppress method.
 
 ```python
@@ -680,18 +703,16 @@ so that your NTP-client application can make use of the parsed results.
 
 ## In Conclusion
 
-Pyparsing provides a basic framework for creating recursive-descent parsers, taking care of the overhead functions of scanning the input string, 
-handling expression mismatches, selecting the longest of matching alternatives, invoking callback functions, and returning the parsed results. 
+Pyparsing provides a basic framework for creating recursive-descent parsers, 
+taking care of the overhead functions of scanning the input string, 
+handling expression mismatches, selecting the longest of matching alternatives, 
+invoking callback functions, and returning the parsed results. 
 This leaves developers free to focus on their grammar design and the design and implementation of corresponding token processing. 
-Pyparsing's nature as a combinator allows developers to scale their applications from simple tokenizers up to complex grammar processors. 
+Pyparsing's nature as a combinator allows developers to 
+scale their applications from simple tokenizers up to complex grammar processors. 
 It is a great way to get started with your next parsing project!
 
 [Download pyparsing from SourceForge](http://pyparsing.sourceforge.net/).
 
-[Paul McGuire](http://www.onlamp.com/pub/au/2557) is a senior manufacturing systems consultant at Alan Weber & Associates. In his spare time, 
-he administers the pyparsing project on SourceForge.
-
-
-
-
-
+[Paul McGuire](http://www.onlamp.com/pub/au/2557) is a senior manufacturing systems consultant at Alan Weber & Associates. 
+In his spare time, he administers the pyparsing project on SourceForge.
