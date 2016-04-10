@@ -19,18 +19,18 @@ Released: October 4, 2007
 
 目录
 
-* 什么是Pyparsing?
-* Pyparsing程序的简单形式
-* "Hello World"
-* 什么使Pyparsing变得不同？
-* 从表中解析数据-使用Parse Action和ParseResults
-* 从网页解析数据
-* 一个简单的S表达式解析器
-* 一个复杂的S表达式解析器
-* 解析搜索字符串
-* 100行代码以内的搜索引擎
-* 结论
-* 索引
+* [Pyparsing是什么?](#what)
+* [Pyparsing程序的简单形式](#basic)
+* ["Hello World"](#hello)
+* [什么使Pyparsing变得不同？](diff)
+* [从表中解析数据-使用Parse Action和ParseResults](#table)
+* [从网页解析数据](#page)
+* [一个简单的S表达式解析器](#SS)
+* [一个复杂的S表达式解析器](#CS)
+* [解析搜索字符串](#search)
+* [100行代码以内的搜索引擎](#engine)
+* [结论](#conclusion)
+* [索引](#index)
 
 
 > "我需要解析这个日志文件..."
@@ -69,7 +69,7 @@ y=2*x+10
 以及wildcards(通配符).Lex/yacc是则先拆出标记，然后应用处理代码到提取出的标记上。Lex/yacc
 使用一个单独的标记定义文件，然后产生lex中间文件以及处理过程代码模板给程序员扩展，以定制不同的应用行为。
 
->历史注释
+>*历史注释*
 >
 >这些文本处理技术最早在1970年以C实现，现在它们仍在广大的领域发挥作用。内置电池的Python拥有标准库
 >`re`来提供对正则表达式的支持。你还可以下到一些免费的lex/yacc风格的解析器模块，其提供了对python的接口。
@@ -80,7 +80,7 @@ y=2*x+10
 实践中，解析器编写看起来陷入到一个怪圈中:写代码，解析示例文本，找到额外的特殊情况等等。
 组合正则表达式符号，额外的代码生成步骤，很可能使这个循环过程可能会不断的陷入挫折。
 
-## Pyparsing是什么?
+## <a name="whatsthis">Pyparsing是什么?
 
 Pyparsing是纯python的，易于使用。Pyparsing提供了一系列类让你可以以单独的表达式元素开始来构建解析器。
 其表达式使用直觉的符号组合，如`+`表示将一个表达式加到另一个后面。`|`,`^`表示解析多选
@@ -130,7 +130,7 @@ Pyparsing是：
 * 轻量级封装-Pyparsing的代码包含在单个python文件中，容易放进site-packages目录下，或者被你的应用直接包含。
 * 宽松的许可证，MIT许可证使得你可以随意进行非商用或商业应用。
 
-## Pyparsing程序的简单形式
+## <a name="basic">Pyparsing程序的简单形式
 
 典型的pyparsing程序具有以下结构:
 * import pyparsing模块
@@ -140,6 +140,7 @@ Pyparsing是：
 
 
 ### 从Pyparsing出导入名字
+
 通常，使用`from pyparsing import *`是不被python风格专家鼓励的。因为它污染了本地变量命名空间，
 因其从不明确的模块中引入的不知道数量的名字。无论如何，在pyparsing开发工作中，很难想象pyparsing定义的名字会被使用，
 而且这样写简化了早期的语法开发。在语法最终完成后，你可以回到传统风格的引用，或专门from导入你需要的那些名字。
@@ -230,6 +231,7 @@ print assignmentTokens
 ```
 
 但是ParseResults也支持解析文本中的个域(individual fields),如果语法为返回值的某些成分指派了名字。
+
 这里我们通过给表达式里的元素取名字加强它们(左项成为lhs,右项称为rhs)，我们就能在ParseResults里连接这些域，
 就像它们是返回的对象的属性一样。
 
@@ -248,10 +250,10 @@ print assignmentTokens.rhs, "is assigned to", assignmentTokens.lhs
 
 现在介绍进入转入细节部分了，让我们看一些例子
 
-## Hello,World
+## <a name="hello">Hello,World
 
 Pyparsing有很多例子，其中有一个简单地"Hello World"解析器。这个简单的例子也被
-[O'Reilly，ONLamp.com](http://onlamp.com)的文章
+[O'Reilly,ONLamp.com](http://onlamp.com)的文章
 [用Python建立递归下降解析器](Building_Recursive_Descent_Parsers_with_Python_en.md)所使用.
 在这一节，我也使用类似的例子以介绍简单的pyparsing解析工具。
 
@@ -500,7 +502,7 @@ Miss Crabtree, say "Yo!" to G.
 
 好了，我们已经见识了pyparsing模块。通过使用一些极其简单的pyparsing类和方法，我们就达成了十分强大的表达能力。
 
-## 什么使得Pyparsing显得不同？
+## <a name="diff">什么使得Pyparsing显得不同？
 
 Pyparsing被设计为满足一些特别的目标，其中包括语法必须易写易理解而且能够很容易修改一个解析器去适应新的需求。
 这些目标在于极简化解析器设计任务使pyparsing用户能聚焦于解析而不是在解析库与元语法之间挣扎，下面是pyparsing之禅.
@@ -598,7 +600,8 @@ Pyparsing的解析结果是ParseResult类的实例。其可以被当成列表操
 ['abc', '(', ['1', '2', 'def', '5'], ')']
 ```
 
-你可以看到参数被放进了一个子列表中，这使得进一步解析更容易。而如果语法定义中给结果中的某些结构命了名，则我们可以使用字段引用法取代索引值法来减少出错概率。
+你可以看到参数被放进了一个子列表中，这使得进一步解析更容易。而如果语法定义中给结果中的某些结构命了名，
+则我们可以使用字段引用法取代索引值法来减少出错概率。
 
 这些高级引用技术在处理更复杂的语法问题时是至关重要的。
 
@@ -611,10 +614,10 @@ pyparsing支持在解析时调用的回调函数(成为解析行为)你可以附
 解析器会在匹配到对应形式时调用这些函数。作为例子，从文本中提取双引号围成的字符串，一个简单地解析行为会移除掉引号。像这样:
 
 ```python
-quotedString.setParseAction( lambda t: t[0][1:?1] )
+quotedString.setParseAction( lambda t: t[0][1:-1] )
 ```
 
-就够了。不需要检查开头结尾是不是引号-这个函数只有匹配到这样的形式时才会调用。
+就够了。不需要检查开头结尾是不是引号.这个函数只有匹配到这样的形式时才会调用。
 
 解析行为也可以用来执行不同的检查，像测试匹配到的词是不是一个给定列表中的词，并在不是时抛出一个`ParseException`。
 解析行为也可以返回一个列表或一个对象，如将输入文本编译为一系列可执行或能调用的对象。解析行为在pyparsing中是个有力的工具。
@@ -630,7 +633,7 @@ pyparsing也没有解决这一问题，但是其单独定义的语法风格和�
 ，易于修改和扩展。这是pyparsing的使用者们发给我的一句话：“我可以只写一个自定义方法，
 但是我过去的经验反应一旦我创建一个pyparsing语法，它就会自动变得有组织而且容易维护和扩展。”
 
-## 从表格文件中解析数据-使用解析行为和ParseResults
+## <a name="table">从表格文件中解析数据-使用解析行为和ParseResults
 
 作为我们第一个例子，让我们看一个处理给定橄榄球比赛文件信息文件的程序。
 该文件每一行记录一场比赛的信息，其中包括时间，比赛双方和他们的比分。
@@ -696,6 +699,7 @@ for test in tests:
 ```
 
 对此的第一个改进是将返回的有关日期的分散的数据组合成简单的MM/DD/YYYY型字符串。我们只要用`Combine`类将表达式包起来就行了。
+
 ```python
 date = Combine( num + "/" + num + "/" + num )
 ```
@@ -823,7 +827,8 @@ for test in tests:
   print "%s %s(%d) %s(%d), %s" % (gamedate, team1[0], team1[1], team2[0], team2[1],result)
 ```
 
-> 最佳实践:使用ResultsNames
+> *最佳实践:使用ResultsNames*
+>
 > 但是这依旧使我们对所处理数据的次序过于敏感。
 取代其的，我们可以在语法中定义名字。为了做到这一点，我们插入setResults-Name到我们的语法里，所以表达式将标记出标签。
 
@@ -865,11 +870,13 @@ print "%(date)s %(team1)s %(team2)s" % stats
 
 `ParseResults`也装备了keys(),items(),values()方法，同时支持以python关键字`in`进行测试。
 
-> 来写令人兴奋的!
-> pyparsing的最新版本(1.4.7)包含了让给表达式追加名字的更简单的记法。缩减代码的效果见此例:
->  ```schoolAndScore =Group( schoolName("school") +score("score") )
-      gameResult = date("date") +schoolAndScore("team1") +schoolAndScore("team2")
-   ```
+>*来写令人兴奋的!*
+>
+>pyparsing的最新版本(1.4.7)包含了让给表达式追加名字的更简单的记法。缩减代码的效果见此例:
+> ```python
+>schoolAndScore =Group( schoolName("school") +score("score") )
+>gameResult = date("date") +schoolAndScore("team1") +schoolAndScore("team2")
+> ```
 > 现在没有理由不为你的解析结果命名了！
 
 为了调试，你可以调用dump()返回已经组织化过的名字与值的层次结构。这是一个调用stats.dump()方法为第一行输入文本的结果:
@@ -905,7 +912,8 @@ print stats.asXML("GAME")
 </GAME>
 ```
 
-这里还有最后一个问题需要考虑，我们的解析器总将输入文本当成合法的。其将执行语法直到遇到终结，然后返回匹配的结果，哪怕输入文本还有很多未被解析。作为例子，这个语句:
+这里还有最后一个问题需要考虑，我们的解析器总将输入文本当成合法的。其将执行语法直到遇到终结，
+然后返回匹配的结果，哪怕输入文本还有很多未被解析。作为例子，这个语句:
 
 ```python
 word = Word("A")
@@ -982,22 +990,22 @@ print "%s %s(%d) %s(%d), %s" % (stats.date, stats.team1.school, stats.team1.scor
 #print stats.asXML("GAME")
 ```
 
-## 从网页数据中提取数据
+## <a name="page">从网页数据中提取数据
 翻译TODO...
 
-## 一个简易S表达式解析器
+## <a name="SS">一个简易S表达式解析器
 翻译TODO...
 
-## 一个完整的S表达式解析器
+## <a name="CS">一个完整的S表达式解析器
 翻译TODO...
 
-## 解析搜索字符串
+## <a name="search">解析搜索字符串
 翻译TODO...
 
-## 100行代码以内的搜索引擎
+## <a name="engine">100行代码以内的搜索引擎
 略翻译TODO...
 
-## 结论
+## <a name="conclusion">结论
 
 我在PyCon'06发表关于pyparsing的介绍，在那我推荐pyparsing作为正则表达式的替代品，
 或处理一些不寻常的问题。之后我被问到一个问题，"pyparsing不能用来做什么？"我踌躇了一会儿，
@@ -1013,7 +1021,7 @@ pyparsing已经被嵌入到很多python附加模块当中，可以到pyparsing�
 我的经验是很多开发者都想得到示范性源代码，并在手头的特定工作上直接运用它们。最近，
 我已经开始收到邮件，他们要求更多的正式文档，所以我希望这个手册可以帮助那些想要在pyparsing取得成果的人们。
 
-## 获得更多帮助
+### 获得更多帮助
 
 这是一些pyparsing用户可用的网络资源，而且它们的数量一直在增长
 
@@ -1023,10 +1031,12 @@ pyparsing已经被嵌入到很多python附加模块当中，可以到pyparsing�
 pyparsing的更新，描述和其他事件被在News页面上更新。而主页的讨论频道是一个用户之间交流思想，
 提出问题的好地方。
 
-* pyparsing邮件组(pyparsing-users@lists.sourceforge.net)。另一个普遍使用的提出pyparsing问题的资源。以前的邮件组信息可以再pyparsing的SourceForge项目上找到，http://sourceforge.net/projects/pyparsing.
+* pyparsing邮件组(pyparsing-users@lists.sourceforge.net)。另一个普遍使用的提出pyparsing问题的资源。
+以前的邮件组信息可以再pyparsing的SourceForge项目上找到，http://sourceforge.net/projects/pyparsing.
 
-* comp.lang.python:这个世界性的讨论组是一个关乎python的一般讨论组，但很可能pyparsing相关的频道将在此建立。这是个好地方去问关于python用法或特殊模块或特殊领域的研究的问题。如果你在这个列表中Google"pyparsing"，你将找到很多讨论。
+* comp.lang.python:这个世界性的讨论组是一个关乎python的一般讨论组，但很可能pyparsing相关的频道将在此建立。
+这是个好地方去问关于python用法或特殊模块或特殊领域的研究的问题。如果你在这个列表中Google"pyparsing"，你将找到很多讨论。
 
-## 索引
+## <a name="index">索引
 
 翻译TODO...
