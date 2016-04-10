@@ -49,10 +49,13 @@ Released: October 4, 2007
 如果你在Python中编程，你可以简化这些工作，通过使用Python的内建字符串方法，比如split(),index()以及startwith().
 
 让这项工作又变得讨厌的是我们经常不只是对字符串分割和索引，对于一些复杂的语法定义来说。比如:
+
 ```
 y = 2 * x + 10   
 ```
+
 它每个符号间都有空分隔,是容易解析的，对于这种空格分离的形式。不幸的是，很少有用户会如此这般使用空格，算术表达式经常像这样写出:
+
 ```
 y = 2*x + 10
 y = 2*x+10
@@ -249,7 +252,7 @@ print assignmentTokens.rhs, "is assigned to", assignmentTokens.lhs
 
 Pyparsing有很多例子，其中有一个简单地"Hello World"解析器。这个简单的例子也被
 [O'Reilly，ONLamp.com](http://onlamp.com)的文章
-[用Python建立递归下降解析器](http://www.onlamp.com/-pub/a/python/2006/01/26/pyparsing.html)所使用.
+[用Python建立递归下降解析器](Building_Recursive_Descent_Parsers_with_Python_en.md)所使用.
 在这一节，我也使用类似的例子以介绍简单的pyparsing解析工具。
 
 当前"Hello,World!"的解析模式被限制为:
@@ -862,7 +865,7 @@ print "%(date)s %(team1)s %(team2)s" % stats
 
 `ParseResults`也装备了keys(),items(),values()方法，同时支持以python关键字`in`进行测试。
 
-> *来写令人兴奋的！*
+> 来写令人兴奋的!
 > pyparsing的最新版本(1.4.7)包含了让给表达式追加名字的更简单的记法。缩减代码的效果见此例:
 >  ```schoolAndScore =Group( schoolName("school") +score("score") )
       gameResult = date("date") +schoolAndScore("team1") +schoolAndScore("team2")
